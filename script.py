@@ -3,7 +3,6 @@ import streamlit as st
 from sqlalchemy import create_engine
 from llama_index.readers.database import SQLReader
 from llama_index import VectorStoreIndex
-import os
 
 # Set up the API key and database URL from environment variables
 OPENAI_API_KEY = st.secrets("OPENAI_API_KEY")
