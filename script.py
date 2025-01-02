@@ -8,8 +8,8 @@ PINECONE_API_KEY = st.secrets["PINECONE_API_KEY"]
 PINECONE_ENV = st.secrets["PINECONE_ENV"]
 DATABASE_URL = st.secrets["DATABASE_URL"]
 
-# Initialize Pinecone client
-pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENV)
+# Initialize Pinecone client using the recommended method
+pinecone_client = pinecone.Pinecone(api_key=PINECONE_API_KEY, environment=PINECONE_ENV)
 
 # Streamlit input and output
 st.title("AI-Driven SQL Query Analyzer")
@@ -28,9 +28,9 @@ def load_data(query):
 
         # Create a Pinecone index or connect to an existing one
         index_name = "your-index-name"  # Define your Pinecone index name
-        if index_name not in pinecone.list_indexes():
-            pinecone.create_index(index_name, dimension=768)  # Assuming 768 for embeddings
-        index = pinecone.Index(index_name)
+        if index_name not in pinecone_client.list_indexes():
+            pinecone_client.create_index(index_name, dimension=768)  # Assuming 768 for embeddings
+        index = pinecone_client.Index(index_name)
 
         # Convert documents to embeddings (this can be done using any model of your choice)
         embeddings = [get_embeddings(doc) for doc in documents]
