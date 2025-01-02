@@ -2,8 +2,6 @@ import streamlit as st
 from sqlalchemy import create_engine
 import pandas as pd
 import pinecone
-from llama_index import ServiceContext, VectorStore
-
 
 # Accessing secrets from Streamlit's secrets management
 PINECONE_API_KEY = st.secrets["PINECONE_API_KEY"]
@@ -35,7 +33,6 @@ def load_data(query):
         index = pinecone.Index(index_name)
 
         # Convert documents to embeddings (this can be done using any model of your choice)
-        # Here we simulate embedding by creating dummy embeddings (replace with actual embedding model)
         embeddings = [get_embeddings(doc) for doc in documents]
 
         # Upsert data into Pinecone index
