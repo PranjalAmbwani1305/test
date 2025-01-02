@@ -3,3 +3,4 @@ openai
 llama-index
 sqlalchemy
 pinecone
+psycopg2
