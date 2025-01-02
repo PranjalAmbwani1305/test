@@ -1,8 +1,9 @@
 import openai
 import streamlit as st
 from sqlalchemy import create_engine
-from llama_index.readers.database import SQLReader
+import pandas as pd
 from llama_index import VectorStoreIndex
+
 
 # Set up the API key and database URL from environment variables
 OPENAI_API_KEY = st.secrets("OPENAI_API_KEY")
@@ -23,12 +24,14 @@ sql_query = st.text_area("Enter your SQL Query", "SELECT * FROM your_table LIMIT
 
 def load_data(query):
     try:
+        # Create an engine and load data using pandas
         db_connection = create_engine(DATABASE_URL)
-        reader = SQLReader(
-            sqlalchemy_engine=db_connection,
-            query=query
-        )
-        documents = reader.load_data()
+        df = pd.read_sql(query, db_connection)
+        
+        # Convert the dataframe to a list of dictionaries for processing
+        documents = df.to_dict(orient="records")  # List of records (dictionaries)
+        
+        # Create an index from the documents
         index = VectorStoreIndex.from_documents(documents)
         return index
     except Exception as e:
@@ -39,6 +42,7 @@ def query_llm(query: str, index):
     if index is None:
         return "No index found, cannot perform query."
     try:
+        # Perform the query against the index
         response = index.query(query)
         return response
     except Exception as e:
@@ -55,3 +59,4 @@ if st.button("Analyze Data"):
         st.write(query_result)
     else:
         st.error("Failed to load data and create index. Cannot perform query.")
+
