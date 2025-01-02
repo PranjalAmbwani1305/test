@@ -2,17 +2,12 @@ import openai
 import streamlit as st
 from sqlalchemy import create_engine
 import pandas as pd
-from llama_index import VectorStoreIndex
+from llama_index import ServiceContext, VectorStore
+import os
 
-
-# Set up the API key and database URL from environment variables
-OPENAI_API_KEY = st.secrets("OPENAI_API_KEY")
-DATABASE_URL = st.secrets("DATABASE_URL")
-
-if not OPENAI_API_KEY:
-    raise ValueError("OPENAI_API_KEY environment variable not set.")
-if not DATABASE_URL:
-    raise ValueError("DATABASE_URL environment variable not set.")
+# Accessing secrets from Streamlit's secrets management
+OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
+DATABASE_URL = st.secrets["DATABASE_URL"]
 
 openai.api_key = OPENAI_API_KEY
 
@@ -27,12 +22,13 @@ def load_data(query):
         # Create an engine and load data using pandas
         db_connection = create_engine(DATABASE_URL)
         df = pd.read_sql(query, db_connection)
-        
+
         # Convert the dataframe to a list of dictionaries for processing
         documents = df.to_dict(orient="records")  # List of records (dictionaries)
-        
-        # Create an index from the documents
-        index = VectorStoreIndex.from_documents(documents)
+
+        # Assuming VectorStore or another index method is used
+        service_context = ServiceContext.from_defaults()
+        index = VectorStore.from_documents(documents, service_context)
         return index
     except Exception as e:
         st.error(f"An error occurred during data loading: {e}")
@@ -59,4 +55,3 @@ if st.button("Analyze Data"):
         st.write(query_result)
     else:
         st.error("Failed to load data and create index. Cannot perform query.")
-
