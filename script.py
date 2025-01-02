@@ -3,7 +3,7 @@ import streamlit as st
 from sqlalchemy import create_engine
 import pandas as pd
 from llama_index import ServiceContext, VectorStore
-import os
+
 
 # Accessing secrets from Streamlit's secrets management
 OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
