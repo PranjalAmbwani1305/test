@@ -6,7 +6,8 @@ import pinecone
 # Accessing secrets from Streamlit's secrets management
 PINECONE_API_KEY = st.secrets["PINECONE_API_KEY"]
 PINECONE_ENV = st.secrets["PINECONE_ENV"]
-DATABASE_URL = st.secrets["DATABASE_URL"]
+
+conn = st.connection("postgresql", type="sql")
 
 # Initialize Pinecone client using the recommended method
 pinecone_client = pinecone.Pinecone(api_key=PINECONE_API_KEY, environment=PINECONE_ENV)
