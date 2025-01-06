@@ -21,7 +21,7 @@ sql_query = st.text_area("Enter your SQL Query", "SELECT * FROM your_table LIMIT
 def load_data(query):
     try:
         # Convert the dataframe to a list of dictionaries for processing
-        documents = df.to_dict(orient="records")  # List of records (dictionaries)
+        documents = to_dict(orient="records")  # List of records (dictionaries)
 
         # Create a Pinecone index or connect to an existing one
         index_name = "your-index-name"  # Define your Pinecone index name
