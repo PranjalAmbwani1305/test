@@ -7,10 +7,11 @@ import pinecone
 PINECONE_API_KEY = st.secrets["PINECONE_API_KEY"]
 PINECONE_ENV = st.secrets["PINECONE_ENV"]
 
-conn = st.connection("postgresql", type="sql")
+# Initialize Pinecone client
+pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENV)
 
-# Initialize Pinecone client using the recommended method
-pinecone_client = pinecone.Pinecone(api_key=PINECONE_API_KEY, environment=PINECONE_ENV)
+# Streamlit connection for PostgreSQL
+conn = st.experimental_connection("postgresql", type="sql")
 
 # Streamlit input and output
 st.title("AI-Driven SQL Query Analyzer")
@@ -18,53 +19,62 @@ st.title("AI-Driven SQL Query Analyzer")
 # Text input for SQL query
 sql_query = st.text_area("Enter your SQL Query", "SELECT * FROM your_table LIMIT 10;")
 
-def load_data(query):
+# Placeholder function for generating embeddings
+def get_embeddings(doc):
+    # Replace this with actual embedding generation logic
+    return [0.1] * 768  # Dummy 768-dimensional vector
+
+# Load data and index it in Pinecone
+def load_data_and_index(query, conn):
     try:
-        # Convert the dataframe to a list of dictionaries for processing
-        documents = to_dict(orient="records")  # List of records (dictionaries)
+        # Fetch data from the database
+        with conn.session as session:
+            df = pd.read_sql(query, session.connection())
+
+        if df.empty:
+            st.error("The SQL query returned no data.")
+            return None
+
+        # Convert the dataframe to a list of dictionaries
+        documents = df.to_dict(orient="records")
 
         # Create a Pinecone index or connect to an existing one
         index_name = "your-index-name"  # Define your Pinecone index name
-        if index_name not in pinecone_client.list_indexes():
-            pinecone_client.create_index(index_name, dimension=768)  # Assuming 768 for embeddings
-        index = pinecone_client.Index(index_name)
+        if index_name not in pinecone.list_indexes():
+            pinecone.create_index(index_name, dimension=768)  # Assuming 768 for embeddings
 
-        # Convert documents to embeddings (this can be done using any model of your choice)
-        embeddings = [get_embeddings(doc) for doc in documents]
+        index = pinecone.Index(index_name)
 
-        # Upsert data into Pinecone index
-        for i, embedding in enumerate(embeddings):
-            index.upsert([(str(i), embedding)])
+        # Convert documents to embeddings and upsert them
+        for i, doc in enumerate(documents):
+            embedding = get_embeddings(doc)  # Replace with actual embeddings
+            index.upsert([(str(i), embedding, doc)])
 
+        st.success("Data successfully loaded and indexed in Pinecone.")
         return index
     except Exception as e:
         st.error(f"An error occurred during data loading: {e}")
         return None
 
-def get_embeddings(doc):
-    # This is a placeholder function, replace with actual model embedding logic
-    return [0.1] * 768  # Dummy 768-dimensional vector, replace with actual embeddings
-
-def query_pinecone(query: str, index):
-    if index is None:
-        return "No index found, cannot perform query."
+# Query Pinecone index
+def query_pinecone(query, index):
     try:
         # Generate an embedding for the query
-        query_embedding = get_embeddings(query)  # You would need to generate this embedding from a model
+        query_embedding = get_embeddings(query)  # Replace with actual embedding generation logic
 
-        # Perform a similarity search against the Pinecone index
-        result = index.query([query_embedding], top_k=5, include_values=True)
+        # Perform a similarity search
+        result = index.query(query_embedding, top_k=5, include_metadata=True)
         return result
     except Exception as e:
         st.error(f"An error occurred during query: {e}")
-        return "An error occurred during query."
+        return None
 
 # Button to trigger loading of data and querying
 if st.button("Analyze Data"):
-    index = load_data(sql_query)
+    pinecone_index = load_data_and_index(sql_query, conn)
 
-    if index:
-        query_result = query_pinecone("What are the key insights from the data?", index)
+    if pinecone_index:
+        query_result = query_pinecone("What are the key insights from the data?", pinecone_index)
         st.subheader("Query Result")
         st.write(query_result)
     else:
