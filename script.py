@@ -14,8 +14,6 @@ PINECONE_ENV = st.secrets["PINECONE_ENV"]
 # Set API keys
 openai.api_key = OPENAI_API_KEY
 
-# Initialize Pinecone environment
-pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENV)
 
 # Streamlit input and output
 st.title("AI-Driven SQL Query Analyzer")
