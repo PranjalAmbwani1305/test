@@ -1,14 +1,21 @@
+import openai
 import streamlit as st
 from sqlalchemy import create_engine
 import pandas as pd
 import pinecone
+import os
 
 # Accessing secrets from Streamlit's secrets management
+OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
+DATABASE_URL = st.secrets["DATABASE_URL"]
 PINECONE_API_KEY = st.secrets["PINECONE_API_KEY"]
 PINECONE_ENV = st.secrets["PINECONE_ENV"]
 
-# Streamlit connection for PostgreSQL
-conn = st.experimental_connection("postgresql", type="sql")
+# Set API keys
+openai.api_key = OPENAI_API_KEY
+
+# Initialize Pinecone environment
+pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENV)
 
 # Streamlit input and output
 st.title("AI-Driven SQL Query Analyzer")
@@ -16,62 +23,64 @@ st.title("AI-Driven SQL Query Analyzer")
 # Text input for SQL query
 sql_query = st.text_area("Enter your SQL Query", "SELECT * FROM your_table LIMIT 10;")
 
-# Placeholder function for generating embeddings
-def get_embeddings(doc):
-    # Replace this with actual embedding generation logic
-    return [0.1] * 768  # Dummy 768-dimensional vector
-
-# Load data and index it in Pinecone
-def load_data_and_index(query, conn):
+# Function to load data and index it into Pinecone
+def load_data(query):
     try:
-        # Fetch data from the database
-        with conn.session as session:
-            df = pd.read_sql(query, session.connection())
+        # Create an engine and load data using pandas
+        db_connection = create_engine(DATABASE_URL)
+        df = pd.read_sql(query, db_connection)
 
-        if df.empty:
-            st.error("The SQL query returned no data.")
-            return None
+        # Convert the dataframe to a list of dictionaries for processing
+        documents = df.to_dict(orient="records")  # List of records (dictionaries)
 
-        # Convert the dataframe to a list of dictionaries
-        documents = df.to_dict(orient="records")
-
-        # Create a Pinecone index or connect to an existing one
-        index_name = "your-index-name"  # Define your Pinecone index name
+        # Create a Pinecone index (if not already created)
+        index_name = "your_index_name"
         if index_name not in pinecone.list_indexes():
-            pinecone.create_index(index_name, dimension=768)  # Assuming 768 for embeddings
+            pinecone.create_index(index_name, dimension=1536, metric="cosine")  # Adjust dimensions as needed
 
+        # Connect to the index
         index = pinecone.Index(index_name)
 
-        # Convert documents to embeddings and upsert them
-        for i, doc in enumerate(documents):
-            embedding = get_embeddings(doc)  # Replace with actual embeddings
-            index.upsert([(str(i), embedding, doc)])
+        # Convert documents into vectors using OpenAI's embedding API (example)
+        vectors = []
+        for doc in documents:
+            text = str(doc)  # You can customize the text representation here
+            embedding = openai.Embedding.create(input=text, model="text-embedding-ada-002")["data"][0]["embedding"]
+            vectors.append((str(doc), embedding))  # Use document ID or another unique identifier
 
-        st.success("Data successfully loaded and indexed in Pinecone.")
+        # Upsert vectors into Pinecone
+        index.upsert(vectors)
+
         return index
+
     except Exception as e:
         st.error(f"An error occurred during data loading: {e}")
         return None
 
-# Query Pinecone index
-def query_pinecone(query, index):
+# Function to query the index with a given query
+def query_llm(query: str, index):
+    if index is None:
+        return "No index found, cannot perform query."
     try:
-        # Generate an embedding for the query
-        query_embedding = get_embeddings(query)  # Replace with actual embedding generation logic
+        # Convert the query into a vector using OpenAI's embedding API
+        embedding = openai.Embedding.create(input=query, model="text-embedding-ada-002")["data"][0]["embedding"]
 
-        # Perform a similarity search
-        result = index.query(query_embedding, top_k=5, include_metadata=True)
+        # Query Pinecone for similar vectors
+        result = index.query(queries=[embedding], top_k=5, include_metadata=True)
+
+        # Process the result
         return result
+
     except Exception as e:
         st.error(f"An error occurred during query: {e}")
-        return None
+        return "An error occurred during query."
 
 # Button to trigger loading of data and querying
 if st.button("Analyze Data"):
-    pinecone_index = load_data_and_index(sql_query, conn)
+    index = load_data(sql_query)
 
-    if pinecone_index:
-        query_result = query_pinecone("What are the key insights from the data?", pinecone_index)
+    if index:
+        query_result = query_llm("What are the key insights from the data?", index)
         st.subheader("Query Result")
         st.write(query_result)
     else:
