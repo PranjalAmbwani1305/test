@@ -7,9 +7,6 @@ import pinecone
 PINECONE_API_KEY = st.secrets["PINECONE_API_KEY"]
 PINECONE_ENV = st.secrets["PINECONE_ENV"]
 
-# Initialize Pinecone client
-pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENV)
-
 # Streamlit connection for PostgreSQL
 conn = st.experimental_connection("postgresql", type="sql")
 
