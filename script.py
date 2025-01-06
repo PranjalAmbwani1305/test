@@ -20,10 +20,6 @@ sql_query = st.text_area("Enter your SQL Query", "SELECT * FROM your_table LIMIT
 
 def load_data(query):
     try:
-        # Create an engine and load data using pandas
-        db_connection = create_engine(DATABASE_URL)
-        df = pd.read_sql(query, db_connection)
-
         # Convert the dataframe to a list of dictionaries for processing
         documents = df.to_dict(orient="records")  # List of records (dictionaries)
 
