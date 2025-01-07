@@ -8,8 +8,7 @@ import os
 # Accessing secrets from Streamlit's secrets management
 OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 DATABASE_URL = st.secrets["DATABASE_URL"]
-PINECONE_API_KEY = st.secrets["PINECONE_API_KEY"]
-PINECONE_ENV = st.secrets["PINECONE_ENV"]
+
 
 # Set API keys
 openai.api_key = OPENAI_API_KEY
