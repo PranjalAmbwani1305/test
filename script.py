@@ -30,14 +30,7 @@ def load_data(query):
         # Convert the dataframe to a list of dictionaries for processing
         documents = df.to_dict(orient="records")  # List of records (dictionaries)
 
-        # Create a Pinecone index (if not already created)
-        index_name = "your_index_name"
-        if index_name not in pinecone.list_indexes():
-            pinecone.create_index(index_name, dimension=1536, metric="cosine")  # Adjust dimensions as needed
-
-        # Connect to the index
-        index = pinecone.Index(index_name)
-
+        
         # Convert documents into vectors using OpenAI's embedding API (example)
         vectors = []
         for doc in documents:
@@ -62,8 +55,7 @@ def query_llm(query: str, index):
         # Convert the query into a vector using OpenAI's embedding API
         embedding = openai.Embedding.create(input=query, model="text-embedding-ada-002")["data"][0]["embedding"]
 
-        # Query Pinecone for similar vectors
-        result = index.query(queries=[embedding], top_k=5, include_metadata=True)
+    
 
         # Process the result
         return result
