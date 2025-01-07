@@ -1,6 +1,6 @@
 import openai
 import streamlit as st
-import sqlalchemy 
+from sqlalchemy import create_engine
 import pandas as pd
 import os
 
@@ -11,6 +11,11 @@ DATABASE_URL = st.secrets["DATABASE_URL"]
 
 # Set API keys
 openai.api_key = OPENAI_API_KEY
+
+connection_string = f'postgresql://postgrea:12345@10.12.32.71:5432/silver_data'
+
+# Create engine
+engine = create_engine(connection_string)
 
 
 # Streamlit input and output
