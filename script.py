@@ -8,6 +8,7 @@ import os
 OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 DATABASE_URL = st.secrets["DATABASE_URL"]
 
+engine = create_engine("mysql+mysqldb://postgres:12345@10.12.32.71:5432/silver_data", pool_size=10, max_overflow=20)
 
 # Set API keys
 openai.api_key = OPENAI_API_KEY
