@@ -2,7 +2,6 @@ import openai
 import streamlit as st
 from sqlalchemy import create_engine
 import pandas as pd
-import pinecone
 import os
 
 # Accessing secrets from Streamlit's secrets management
