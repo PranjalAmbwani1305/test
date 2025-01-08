@@ -7,6 +7,7 @@ import os
 # Accessing secrets from Streamlit's secrets management
 OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 
+# Get PostgreSQL credentials from Streamlit secrets
 host = st.secrets["postgresql"]["host"]
 port = st.secrets["postgresql"]["port"]
 user = st.secrets["postgresql"]["user"]
@@ -16,7 +17,7 @@ dbname = st.secrets["postgresql"]["dbname"]
 # Set API keys
 openai.api_key = OPENAI_API_KEY
 
-# Correct connection string for SQLAlchemy
+# Create the connection string using the credentials
 connection_string = f'postgresql://{user}:{password}@{host}:{port}/{dbname}'
 
 # Create SQLAlchemy engine
@@ -28,54 +29,51 @@ st.title("AI-Driven SQL Query Analyzer")
 # Text input for SQL query
 sql_query = st.text_area("Enter your SQL Query", "SELECT * FROM your_table LIMIT 10;")
 
-# Function to load data from the database
+# Function to load data from PostgreSQL database
 def load_data(query):
     try:
-        # Using SQLAlchemy engine to load data into pandas dataframe
+        # Use SQLAlchemy engine to execute query and load data
         df = pd.read_sql(query, engine)
 
         # Convert the dataframe to a list of dictionaries for processing
         documents = df.to_dict(orient="records")  # List of records (dictionaries)
 
-        # Convert documents into vectors using OpenAI's embedding API
+        # Convert documents into vectors using OpenAI's embedding API (example)
         vectors = []
         for doc in documents:
             text = str(doc)  # You can customize the text representation here
             embedding = openai.Embedding.create(input=text, model="text-embedding-ada-002")["data"][0]["embedding"]
             vectors.append((str(doc), embedding))  # Use document ID or another unique identifier
 
-        # You should be initializing the Pinecone index here to upsert vectors
-        # index.upsert(vectors)
-
-        return vectors  # Return vectors instead of Pinecone index for now
+        # Return vectors (not involving Pinecone in this code, but you can integrate it)
+        return vectors
 
     except Exception as e:
         st.error(f"An error occurred during data loading: {e}")
         return None
 
-# Function to query the index (for now, just using OpenAI's embeddings)
-def query_llm(query: str, vectors):
-    if vectors is None:
+# Function to query the index with a given query (optional integration with Pinecone or another service)
+def query_llm(query: str, index):
+    if index is None:
         return "No index found, cannot perform query."
-    
     try:
         # Convert the query into a vector using OpenAI's embedding API
         embedding = openai.Embedding.create(input=query, model="text-embedding-ada-002")["data"][0]["embedding"]
 
-        # Process the result (for now just returning a placeholder result)
-        return "Results of the query (currently dummy result)"
-    
+        # Process the result (this is where you would query Pinecone or perform further analysis)
+        return "Result from querying LLM or index (you can add more here)"
+
     except Exception as e:
         st.error(f"An error occurred during query: {e}")
         return "An error occurred during query."
 
 # Button to trigger loading of data and querying
 if st.button("Analyze Data"):
-    vectors = load_data(sql_query)
+    index = load_data(sql_query)
 
-    if vectors:
-        query_result = query_llm("What are the key insights from the data?", vectors)
+    if index:
+        query_result = query_llm("What are the key insights from the data?", index)
         st.subheader("Query Result")
         st.write(query_result)
     else:
-        st.error("Failed to load data. Cannot perform query.")
+        st.error("Failed to load data and create index. Cannot perform query.")
