@@ -35,8 +35,14 @@ def load_data(query):
         # Use SQLAlchemy engine to execute query and load data
         df = pd.read_sql(query, engine)
 
+        # Check if DataFrame is empty
+        if df.empty:
+            st.warning("Query returned no data.")
+            return None
+
         # Convert the dataframe to a list of dictionaries for processing
         documents = df.to_dict(orient="records")  # List of records (dictionaries)
+        st.write(f"Loaded {len(documents)} records.")
 
         # Convert documents into vectors using OpenAI's embedding API (example)
         vectors = []
@@ -56,12 +62,17 @@ def load_data(query):
 def query_llm(query: str, index):
     if index is None:
         return "No index found, cannot perform query."
+    
     try:
         # Convert the query into a vector using OpenAI's embedding API
         embedding = openai.Embedding.create(input=query, model="text-embedding-ada-002")["data"][0]["embedding"]
-
-        # Process the result (this is where you would query Pinecone or perform further analysis)
-        return "Result from querying LLM or index (you can add more here)"
+        
+        # Placeholder logic for querying your data index
+        # This is where you would integrate with your vector database or model to get results
+        # For now, we return a mock result
+        result = f"Query: {query}\nEmbedding: {embedding[:5]}... (first 5 elements of embedding)"
+        
+        return result
 
     except Exception as e:
         st.error(f"An error occurred during query: {e}")
@@ -69,6 +80,7 @@ def query_llm(query: str, index):
 
 # Button to trigger loading of data and querying
 if st.button("Analyze Data"):
+    # Load data and generate embeddings
     index = load_data(sql_query)
 
     if index:
