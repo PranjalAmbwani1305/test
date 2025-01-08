@@ -47,11 +47,12 @@ def load_data(query):
         # Convert documents into vectors using OpenAI's embedding API (example)
         vectors = []
         for doc in documents:
-            text = str(doc)  # You can customize the text representation here
+            # You can customize the text field(s) used for embedding here
+            text = str(doc)  # This is a simple conversion, consider refining it
             embedding = openai.Embedding.create(input=text, model="text-embedding-ada-002")["data"][0]["embedding"]
             vectors.append((str(doc), embedding))  # Use document ID or another unique identifier
 
-        # Return vectors (not involving Pinecone in this code, but you can integrate it)
+        # Return vectors (you can integrate with a vector database like Pinecone here)
         return vectors
 
     except Exception as e:
