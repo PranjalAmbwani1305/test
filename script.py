@@ -7,18 +7,13 @@ import os
 # Accessing secrets from Streamlit's secrets management
 OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 
-# Get PostgreSQL credentials from Streamlit secrets
-host = st.secrets["postgresql"]["host"]
-port = st.secrets["postgresql"]["port"]
-user = st.secrets["postgresql"]["user"]
-password = st.secrets["postgresql"]["password"]
-dbname = st.secrets["postgresql"]["dbname"]
 
 # Set API keys
 openai.api_key = OPENAI_API_KEY
 
 # Create the connection string using the credentials
-connection_string = f'postgresql://{user}:{password}@{host}:{port}/{dbname}'
+connection_string = f'postgresql://postgres:12345@localhost:5432/silver_data'
+
 
 # Create SQLAlchemy engine
 try:
