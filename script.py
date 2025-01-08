@@ -6,8 +6,25 @@ import os
 
 # Accessing secrets from Streamlit's secrets management
 OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
-DATABASE_URL = st.secrets["DATABASE_URL"]
 
+host = st.secrets["postgresql"]["host"]
+port = st.secrets["postgresql"]["port"]
+user = st.secrets["postgresql"]["user"]
+password = st.secrets["postgresql"]["password"]
+dbname = st.secrets["postgresql"]["dbname"]
+
+# Try to connect to PostgreSQL
+try:
+    conn = psycopg2.connect(
+        host=host,
+        port=port,
+        user=user,
+        password=password,
+        dbname=dbname
+    )
+    st.success("Connected to PostgreSQL successfully!")
+except psycopg2.OperationalError as e:
+    st.error(f"Error connecting to database: {e}")
 
 # Set API keys
 openai.api_key = OPENAI_API_KEY
