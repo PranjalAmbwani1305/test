@@ -21,7 +21,15 @@ openai.api_key = OPENAI_API_KEY
 connection_string = f'postgresql://{user}:{password}@{host}:{port}/{dbname}'
 
 # Create SQLAlchemy engine
-engine = create_engine(connection_string)
+try:
+    engine = create_engine(connection_string)
+    # Test connection
+    with engine.connect() as conn:
+        conn.execute("SELECT 1")  # simple test query
+    st.success("Database connection successful!")
+except Exception as e:
+    st.error(f"Database connection failed: {e}")
+    engine = None
 
 # Streamlit input and output
 st.title("AI-Driven SQL Query Analyzer")
@@ -31,6 +39,10 @@ sql_query = st.text_area("Enter your SQL Query", "SELECT * FROM your_table LIMIT
 
 # Function to load data from PostgreSQL database
 def load_data(query):
+    if engine is None:
+        st.error("Database connection is not established.")
+        return None
+
     try:
         # Use SQLAlchemy engine to execute query and load data
         df = pd.read_sql(query, engine)
