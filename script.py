@@ -3,6 +3,7 @@ import streamlit as st
 from sqlalchemy import create_engine
 import pandas as pd
 import os
+import psycopg2
 
 # Accessing secrets from Streamlit's secrets management
 OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
