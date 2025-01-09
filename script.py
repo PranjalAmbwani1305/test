@@ -13,7 +13,7 @@ OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 openai.api_key = OPENAI_API_KEY
 
 # Create the connection string using the credentials
-connection_string = f'postgresql://postgres:12345@localhost:5432/silver_data'
+connection_string = f'postgresql://postgres:12345@localhost:5432/postgres'
 
 
 # Create SQLAlchemy engine
